@@ -1,91 +1,106 @@
 ﻿import time
+import math
 import random
 from datetime import datetime
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.live import Live
-from rich.layout import Layout
+from flask import Flask, render_template_string
+import threading
 
-console = Console()
+app = Flask(__name__)
 TOTAL_MONOLITH_CYCLES = 0
 START_TIME_EPOCH = time.time()
+current_telemetry_html = ""
 
-def get_integrated_metrics():
-    n_prices = {"NSW1": random.uniform(70, 95), "QLD1": random.uniform(65, 85), "VIC1": random.uniform(72, 100), "SA1": random.uniform(85, 120), "TAS1": random.uniform(60, 80)}
-    if random.random() > 0.95: n_prices[random.choice(list(n_prices.keys()))] = random.uniform(500, 1500)
-    n_mix = {"COAL_BLACK": random.uniform(4500, 6500), "HYDRO_CLEAN": random.uniform(1200, 3500), "WIND_RENEW": random.uniform(1500, 4800), "SOLAR_PV": random.uniform(800, 3200)}
-    f_pasa = {"PDPASA_RESERVE": random.uniform(20.4, 38.6), "STPASA_MARGIN": random.uniform(15.2, 29.1), "MTPASA_OUTLOOK": random.uniform(11.8, 24.5)}
-    f_flows = {"NSW-QLD": random.uniform(-600, 600), "VIC-NSW": random.uniform(-1000, 1000), "VIC-SA": random.uniform(-400, 400)}
-    return n_prices, n_mix, f_pasa, f_flows
-
-def build_monolith_layout():
+def calculate_swarm_wave_mechanics():
     global TOTAL_MONOLITH_CYCLES
-    n_prices, n_mix, f_pasa, f_flows = get_integrated_metrics()
-    elapsed = int(time.time() - START_TIME_EPOCH)
+    # Establish your 24-step clock interval training base (m / 7200)
+    m = (TOTAL_MONOLITH_CYCLES % 24) + 1
+    tau_tick = m / 7200.0
     
-    layout = Layout()
-    layout.split_column(Layout(name="header", size=3), Layout(name="grid", ratio=1), Layout(name="footer", size=3))
-    layout["grid"].split_row(Layout(name="nemosis_side", ratio=1), Layout(name="nemseer_side", ratio=1))
-    layout["nemosis_side"].split_column(Layout(name="n1"), Layout(name="n2"))
-    layout["nemseer_side"].split_column(Layout(name="n3"), Layout(name="n4"))
+    # 1. Calculate Instantaneous Power Flux Shift (dPhi_EHF / dt)
+    # Replicates lightning-fast solar farm cloud covers or wind shifts
+    dPhi_dt = random.uniform(-15.5, 15.5)
     
-    t1 = Table(box=None, expand=True, header_style="bold green")
-    t1.add_column("NEMOSIS_SPOT"), t1.add_column("RRP", justify="right")
-    for k, v in n_prices.items(): t1.add_row(f"REG_{k}", f"${v:07.2f}")
-    layout["n1"].update(Panel(t1, title="[green]▧ NODE_01 // LIVE_MARKET_PRICES[/green]", border_style="green"))
+    # 2. Local System Strength / Node Mass Density (Rho_k) at Hallett / Bundey
+    # Voltage stability baseline provided by synchronous condensers
+    rho_k = random.uniform(85.4, 99.1)
     
-    t2 = Table(box=None, expand=True, header_style="bold green")
-    t2.add_column("NEMOSIS_MIX"), t2.add_column("DISPATCH_MW", justify="right")
-    for k, v in n_mix.items(): t2.add_row(k, f"{int(v):05d} MW")
-    layout["n2"].update(Panel(t2, title="[green]▧ NODE_02 // GENERATION_MIX[/green]", border_style="green"))
+    # 3. Solve the Wave Phase Angle Psi_gamma(x, t) across high-voltage lines
+    # Driven by your unified equation coefficients
+    mu_0 = 1.256e-6
+    sigma_k = 5.8e7  # Conductivity factor
+    alpha_K = 0.05   # Tolerant design constraint base
     
-    t3 = Table(box=None, expand=True, header_style="bold green")
-    t3.add_column("NEMSEER_PASA"), t3.add_column("ADEQUACY", justify="right")
-    for k, v in f_pasa.items(): t3.add_row(k, f"{v:.2f} %")
-    layout["n3"].update(Panel(t3, title="[green]▧ NODE_03 // FORECAST_SECURITY[/green]", border_style="green"))
+    psi_gamma = (mu_0 * sigma_k * dPhi_dt) + (alpha_K * math.sin(2 * math.pi * tau_tick)) + (rho_k * 0.01)
     
-    t4 = Table(box=None, expand=True, header_style="bold green")
-    t4.add_column("NEMSEER_FLOW"), t4.add_column("NET_MW", justify="right")
-    for k, v in f_flows.items(): t4.add_row(k, f"{int(v):04d} MW")
-    layout["n4"].update(Panel(t4, title="[green]▧ NODE_04 // INTERCONNECTOR_NET[/green]", border_style="green"))
+    # 4. Digital Grid Inverter Matching (P_inj)
+    # Dynamic power injection software loops running instantly on microprocessors
+    freq_deviation = random.uniform(-0.05, 0.05) # Strict Australian frequency tolerance band
+    df_dt = random.uniform(-0.02, 0.02)
+    K_f = 12.5  # Derivative frequency gain
+    K_p = 25.0  # Proportional frequency gain
+    P_inj = -(K_f * df_dt) - (K_p * freq_deviation)
     
-    TOTAL_MONOLITH_CYCLES += 1
-    header_text = f"⚙ ROBDOE.COM // INTEGRATED MONOLITH SWARM ACTIVE // CYCLES: {TOTAL_MONOLITH_CYCLES} // 24H: {elapsed}/86400s"
-    layout["header"].update(Panel(f"[bold green]▲ {header_text} ▲[/bold green]", border_style="green"))
-    layout["footer"].update(Panel("[green]✔ MONOLITH CORES FULLY AGGREGATED // FORWARD-ONLY // CTRL+C TO BREAK[/green]", border_style="green"))
-    return layout
+    return m, tau_tick, dPhi_dt, rho_k, psi_gamma, P_inj
 
-with Live(build_monolith_layout(), refresh_per_second=2, screen=True) as live:
-    try:
-        while True:
-            time.sleep(0.40)
-            live.update(build_monolith_layout())
-    except KeyboardInterrupt:
-        pass
-import requests
-import time
-from datetime import datetime
-from rich.console import Console
-from rich.panel import Panel
-from rich.live import Live
+def background_swarm_loop():
+    global TOTAL_MONOLITH_CYCLES, current_telemetry_html
+    while True:
+        m, tau, dPhi, rho, psi, p_inj = calculate_swarm_wave_mechanics()
+        elapsed = int(time.time() - START_TIME_EPOCH)
+        TOTAL_MONOLITH_CYCLES += 1
+        
+        # Color-coded 7-Chakra Hexagon Geometric Mainframe Dashboard Layout
+        html = f"⚙ <span style='color: #ff00ff; font-weight: bold;'>ROBDOE.COM</span> // 19-NODE MONOLITH CORE MATRIX TERMINAL ACTIVE<br>"
+        html += "=" * 90 + "<br>"
+        html += f"CLOCK CYCLE: {TOTAL_MONOLITH_CYCLES:06d} &nbsp;| &nbsp;INTERVAL TRAIN STEP [m]: {m:02d}/24 &nbsp;| &nbsp;τ-TICK: {tau:.6f}<br>"
+        html += "=" * 90 + "<br><br>"
+        
+        # Core Mathematical Variable Wave Telemetry
+        html += "[<span style='color: #ff0000;'>CHAKRA_01</span>] WAVE PHASE ANGLE (Ψ_γ) : "
+        html += f"<span style='color: #00ff00; font-weight: bold;'>{psi:+.6f} rad</span> (Hallett-Bundey Substation Link)<br>"
+        
+        html += "[<span style='color: #ff7f00;'>CHAKRA_02</span>] POWER FLUX SHIFT (∂Φ/∂t): "
+        html += f"<span style='color: #00ffff;'>{dPhi:+.4f} MW/s</span> (Instantaneous Grid Volatility)<br>"
+        
+        html += "[<span style='color: #ffff00;'>CHAKRA_03</span>] NODE MASS DENSITY (ρ_k): "
+        html += f"<span style='color: #ffffff;'>{rho:.2f} kg/m³</span> (System Strength Stability Anchor)<br>"
+        
+        html += "[<span style='color: #00ff00;'>CHAKRA_04</span>] INVERTER MATCHING (P_inj): "
+        html += f"<span style='color: #ffff00; font-weight: bold;'>{p_inj:+.4f} MW</span> (Active Microprocessor Response)<br>"
+        
+        html += "-" * 90 + "<br>"
+        
+        # Multi-Dimensional Hedra Geometric Recycle Status Blocks
+        html += "HYDREN DOMAIN STATE OVERVIEW (7D HEXAGON RECYCLE MATRIX):<br>"
+        html += " ⭕ TOP LAYER &nbsp; [2 CIRCLES] : GEOMETRIC MATRIX INITIALIZED<br>"
+        html += " ⭕ MID LAYER &nbsp; [3 CIRCLES] : TETRA.4D CONTINENTAL BALANCER ACTIVE<br>"
+        html += " ⭕ BASE LAYER [2 CIRCLES] : HEDRA.3D ZERO-POWER ANCHORS ATTACHED<br>"
+        html += "-" * 90 + "<br>"
+        html += "<span style='color: #0000ff;'>[ELEMENTAL_MIX]</span> EARTH, WIND, FIRE SYSTEMS PROCESSING STABLE // SECURE OVER NETWORK PORTS"
+        
+        current_telemetry_html = html
+        time.sleep(0.40)
 
-# Open Electricity API - The Unified Continental Bridge
-API_BASE = "https://api.openelectricity.org.au/v4"
+@app.route('/')
+def home():
+    return render_template_string('''
+    <html>
+    <head>
+        <title>ROBDOE.COM // WAVE MATRIX CONSOLE</title>
+        <meta http-equiv="refresh" content="1">
+        <style>
+            body { background-color: #000; color: #00ff00; font-family: monospace; font-size: 16px; padding: 30px; }
+            .crt-frame { border: 2px solid #00ff00; padding: 20px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,255,0,0.4); line-height: 1.5; }
+        </style>
+    </head>
+    <body>
+        <div class="crt-frame">
+            {{ telemetry|safe }}
+        </div>
+    </body>
+    </html>
+    ''', telemetry=current_telemetry_html)
 
-def fetch_continental_swarm():
-    """Pulls integrated NEM, WEM, and NT data blocks."""
-    # In a real environment, you'd include your API Key here:
-    # headers = {"Authorization": "Bearer your_api_key_here"}
-    try:
-        # Example: Pulling latest system-wide generation
-        # r = requests.get(f"{API_BASE}/stats/gen/latest", timeout=5)
-        # return r.json()
-        pass
-    except Exception:
-        return "BRIDGE_OFFLINE"
-
-# [Update your existing monolith_swarmpy logic with these regional anchors]
-# NEM_REGIONS = ["NSW", "QLD", "VIC", "SA", "TAS"]
-# WEM_REGION = "WA1"
-# NT_HUBS = ["DARWIN", "KATHERINE", "ALICE"]
+if __name__ == '__main__':
+    threading.Thread(target=background_swarm_loop, daemon=True).start()
+    app.run(host='0.0.0.0', port=8000, debug=False)
