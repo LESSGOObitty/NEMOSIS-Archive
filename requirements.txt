@@ -1,0 +1,8 @@
+﻿requests
+pyarrow
+feather-format
+pandas
+xlrd
+beautifulsoup4
+openpyxl
+cachetools
